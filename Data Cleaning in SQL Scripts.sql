@@ -1,6 +1,7 @@
 /*
 
 Cleaning Data in SQL Queries
+import NashvilleHousing.xlsx  file
 
 */
 
@@ -24,6 +25,18 @@ SET SaleDate = CONVERT(Date,SaleDate)
 
 -- If it doesn't Update properly
 
+-- The following block of code is for testing purpose when run the codes below several times
+USE PortfolioProject;
+IF EXISTS (
+    SELECT 1 
+    FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_NAME = 'NashvilleHousing' AND COLUMN_NAME = 'SaleDateConverted'
+)
+BEGIN
+    ALTER TABLE NashvilleHousing
+    DROP COLUMN SaleDateConverted;
+END;
+
 ALTER TABLE PortfolioProject.dbo.NashvilleHousing
 Add SaleDateConverted Date;
 
@@ -41,11 +54,12 @@ go;
 
 Select *
 From PortfolioProject.dbo.NashvilleHousing
---Where PropertyAddress is null
+--Check null address
+--Where PropertyAddress is null 
 order by ParcelID
 
 
-
+-- Find the addresses with null values which will fill in the blank of addresss
 Select a.ParcelID, a.PropertyAddress, b.ParcelID, b.PropertyAddress, ISNULL(a.PropertyAddress,b.PropertyAddress)
 From PortfolioProject.dbo.NashvilleHousing a
 JOIN PortfolioProject.dbo.NashvilleHousing b
@@ -69,19 +83,19 @@ Where a.PropertyAddress is null
 
 -- Breaking out Address into Individual Columns (Address, City, State)
 
-
+-- Process Property Address
 Select PropertyAddress
 From PortfolioProject.dbo.NashvilleHousing
 --Where PropertyAddress is null
 --order by ParcelID
-
+-- CHARINDEX(',', PropertyAddress) is to find ',' position/index in string PropertyAddress
 SELECT
 SUBSTRING(PropertyAddress, 1, CHARINDEX(',', PropertyAddress) -1 ) as Address
 , SUBSTRING(PropertyAddress, CHARINDEX(',', PropertyAddress) + 1 , LEN(PropertyAddress)) as Address
 
-From PortfolioProject.dbo.NashvilleHousing
+From PortfolioProject.dbo.NashvilleHousing;
 
-
+-- Add 2 columns
 ALTER TABLE PortfolioProject.dbo.NashvilleHousing
 Add PropertySplitAddress Nvarchar(255);
 
@@ -104,11 +118,11 @@ From PortfolioProject.dbo.NashvilleHousing
 
 
 
-
+--Process Owner's Address,try to use parsename instead of substring()
 Select OwnerAddress
 From PortfolioProject.dbo.NashvilleHousing
 
-
+-- parsename only work with '.' period. Also the section number is count from right to left, so 1 is state 3 is address
 Select
 PARSENAME(REPLACE(OwnerAddress, ',', '.') , 3) -- Parsename ONLY work with '.' as seperate
 ,PARSENAME(REPLACE(OwnerAddress, ',', '.') , 2)
@@ -116,7 +130,7 @@ PARSENAME(REPLACE(OwnerAddress, ',', '.') , 3) -- Parsename ONLY work with '.' a
 From PortfolioProject.dbo.NashvilleHousing
 
 
-
+-- Add 3 columns
 ALTER TABLE PortfolioProject.dbo.NashvilleHousing
 Add OwnerSplitAddress Nvarchar(255);
 
@@ -137,7 +151,7 @@ Add OwnerSplitState Nvarchar(255);
 
 Update PortfolioProject.dbo.NashvilleHousing
 SET OwnerSplitState = PARSENAME(REPLACE(OwnerAddress, ',', '.') , 1)
-
+Go
 
 
 Select *
@@ -151,12 +165,11 @@ From PortfolioProject.dbo.NashvilleHousing
 
 -- Change Y and N to Yes and No in "Sold as Vacant" field
 
-
+-- Use Distinct() to view the variants
 Select Distinct(SoldAsVacant), Count(SoldAsVacant) as Cnt
 From PortfolioProject.dbo.NashvilleHousing
 Group by SoldAsVacant
 order by Cnt desc
-
 
 
 
@@ -167,7 +180,7 @@ Select SoldAsVacant
   END
 From PortfolioProject.dbo.NashvilleHousing
 
-
+-- Set/Update
 Update PortfolioProject.dbo.NashvilleHousing
 SET SoldAsVacant = 
 	CASE When SoldAsVacant = 'Y' THEN 'Yes'
@@ -205,7 +218,22 @@ Select *
 From RowNumCTE
 Where row_num > 1
 Order by PropertyAddress
-GO
+go
+
+/*
+-- or use the following
+-- Create a new table without duplicate rows
+SELECT DISTINCT *
+INTO TempTable
+FROM PortfolioProject.dbo.NashvilleHousing
+
+-- Drop the original table
+DROP TABLE PortfolioProject.dbo.NashvilleHousing
+
+-- Rename the new table to the original table name
+EXEC sp_rename 'TempTable', 'NashvilleHousing';
+*/
+
 
 
 
