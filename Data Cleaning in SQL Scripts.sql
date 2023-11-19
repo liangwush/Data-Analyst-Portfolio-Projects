@@ -5,6 +5,26 @@ import NashvilleHousing.xlsx  file
 
 */
 
+/*
+Some USEFUL functions to process string
+
+1. trim()
+-- Removing leading and trailing spaces, hyphens, and slashes
+SELECT TRIM(BOTH ' -/' FROM your_column) AS stripped_column
+FROM your_table;
+
+2. replace()
+-- Removing hyphens and slashes from the middle of the string
+SELECT REPLACE(your_column, '-', '') AS stripped_column
+FROM your_table;
+
+3. regexp_replace()
+-- Removing characters that are not letters or digits
+SELECT REGEXP_REPLACE(your_column, '[^a-zA-Z0-9]', '') AS stripped_column
+FROM your_table;
+
+*/
+
 
 Select *
 From PortfolioProject.dbo.NashvilleHousing
